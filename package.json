@@ -1,0 +1,25 @@
+{
+    "name": "markdown",
+    "version": "1.0.0",
+    "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
+    "synopsis": "Libraries to process markdown documents",
+    "category": [ "Web" ],
+    "dependencies": {
+        "html": ">= 1.0.0"
+    },
+    "exportedModules": [ "Markdown" ],
+    "compilerCompatibility": {
+        "pakcs": ">= 1.14.0, < 2.0.0",
+        "kics2": ">= 0.5.0,  < 2.0.0"
+    },
+    "license": "BSD-3-Clause",
+    "licenseFile": "LICENSE",
+    "executable": {
+        "name": "md2pdf",
+        "main": "ProcessMarkdown"
+    },
+    "source": {
+        "git": "https://git.ps.informatik.uni-kiel.de/curry-packages/markdown.git",
+        "tag": "$version"
+    }
+}
