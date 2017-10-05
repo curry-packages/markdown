@@ -7,7 +7,7 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version December 2011
+--- @version October 2017
 --- @category web
 ------------------------------------------------------------------------------
 
@@ -21,10 +21,12 @@ module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
 
 import Char
 import IO   (getContents)
-import HTML
-import HTML.Parser
 import List
 import System
+
+import HTML.Base
+import HTML.LaTeX
+import HTML.Parser
 
 -----------------------------------------------------------------------
 --- A markdown document is a list of markdown elements.
