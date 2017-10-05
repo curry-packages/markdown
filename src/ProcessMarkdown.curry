@@ -1,6 +1,6 @@
 -- Simple environment to format Markdown documents.
 
-import HTML
+import HTML.Base
 import IO
 import Markdown
 import System
