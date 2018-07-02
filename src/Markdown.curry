@@ -7,7 +7,7 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version October 2017
+--- @version July 2018
 --- @category web
 ------------------------------------------------------------------------------
 
@@ -282,7 +282,9 @@ outsideMarkdownElem txt s = case s of
   ('_':'_':cs) -> addPrevious txt $ insideMarkdownElem "__" [] cs
   ('*':cs)     -> addPrevious txt $ insideMarkdownElem "*" [] cs
   ('_':cs)     -> addPrevious txt $ insideMarkdownElem "_" [] cs
-  ('`':cs)     -> addPrevious txt $ insideMarkdownElem "`" [] cs
+  ('`':cs) -> let (ticks, cs') = span (=='`') cs in
+              addPrevious txt $ insideMarkdownElem
+                                  (replicate (length ticks + 1) '`') [] cs'
   ('[':cs) -> addPrevious txt $ tryParseLink cs
   ('<':cs) -> if take 4 cs == "http"
               then addPrevious txt $ markdownHRef cs
@@ -322,12 +324,13 @@ insideMarkdownElem marker etext s =
 
 text2MDElem :: String -> String -> SourceMDElem
 text2MDElem marker txt = case marker of
-  "**" -> SMDStrong txt
-  "__" -> SMDStrong txt
-  "*"  -> SMDEmph txt
-  "_"  -> SMDEmph txt
-  "`"  -> SMDCode txt
-  _    -> error $ "Markdown.text2MDElem: unknown marker \""++marker++"\""
+  "**"                   -> SMDStrong txt
+  "__"                   -> SMDStrong txt
+  "*"                    -> SMDEmph txt
+  "_"                    -> SMDEmph txt
+  _ | all (=='`') marker -> SMDCode txt
+    | otherwise          -> error $ "Markdown.text2MDElem: unknown marker \"" ++
+                                     marker ++ "\""
 
 
 -----------------------------------------------------------------------
@@ -361,7 +364,7 @@ mdDoc2htmlWithoutPar mdoc = case mdoc of
   [] -> []
   [Par md] -> mdDoc2html md
   [md] -> [mdElem2html md]
-  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline : 
+  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline :
                          mdDoc2htmlWithoutPar (md2:mds)
   (md1:md2:mds) -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
 
