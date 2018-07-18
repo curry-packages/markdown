@@ -1,11 +1,11 @@
 {
     "name": "markdown",
-    "version": "2.0.1",
+    "version": "3.0.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Libraries to process markdown documents",
     "category": [ "Web" ],
     "dependencies": {
-        "html": ">= 2.0.0"
+        "html": ">= 3.0.0"
     },
     "exportedModules": [ "Markdown" ],
     "compilerCompatibility": {

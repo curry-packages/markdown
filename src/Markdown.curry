@@ -19,10 +19,10 @@ module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
                 formatMarkdownFileAsPDF,formatMarkdownInputAsPDF)
  where
 
-import Char
-import IO   (getContents)
-import List
-import System
+import Data.Char
+import System.IO   (getContents)
+import Data.List
+import System.Process
 
 import HTML.Base
 import HTML.LaTeX

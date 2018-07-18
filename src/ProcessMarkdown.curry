@@ -1,9 +1,10 @@
 -- Simple environment to format Markdown documents.
 
 import HTML.Base
-import IO
+import System.IO
 import Markdown
-import System
+import System.Environment
+import System.Process
 
 main :: IO ()
 main = do
