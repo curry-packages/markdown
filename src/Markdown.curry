@@ -305,7 +305,7 @@ tryParseLink txt = let (linktxt,rtxt) = break (==']') txt in
 markdownHRef :: String -> [SourceMDElem]
 markdownHRef txt = let (url,rtxt) = break (=='>') txt in
   if null rtxt
-  then outsideMarkdownElem "" ('<':txt)
+  then outsideMarkdownElem "<" txt
   else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
 
 insideMarkdownElem :: String -> String -> String -> [SourceMDElem]
