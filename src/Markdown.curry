@@ -286,9 +286,7 @@ outsideMarkdownElem txt s = case s of
               addPrevious txt $ insideMarkdownElem
                                   (replicate (length ticks + 1) '`') [] cs'
   ('[':cs) -> addPrevious txt $ tryParseLink cs
-  ('<':cs) -> if take 4 cs == "http"
-              then addPrevious txt $ markdownHRef cs
-              else outsideMarkdownElem ('<':txt) cs
+  ('<':cs) -> addPrevious txt $ markdownHRef cs
   (c:cs)   -> outsideMarkdownElem (c:txt) cs
 
 addPrevious :: String -> [SourceMDElem] -> [SourceMDElem]
@@ -307,7 +305,7 @@ tryParseLink txt = let (linktxt,rtxt) = break (==']') txt in
 markdownHRef :: String -> [SourceMDElem]
 markdownHRef txt = let (url,rtxt) = break (=='>') txt in
   if null rtxt
-  then outsideMarkdownElem "" ('<':txt)
+  then outsideMarkdownElem "<" txt
   else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
 
 insideMarkdownElem :: String -> String -> String -> [SourceMDElem]
