@@ -1,6 +1,6 @@
 {
     "name": "markdown",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Libraries to process markdown documents",
     "category": [ "Web" ],
