@@ -28,6 +28,10 @@ import HTML.Base
 import HTML.LaTeX
 import HTML.Parser
 
+import HTML.Base
+import HTML.LaTeX
+import HTML.Parser
+
 -----------------------------------------------------------------------
 --- A markdown document is a list of markdown elements.
 type MarkdownDoc = [MarkdownElem]
@@ -307,7 +311,7 @@ tryParseLink txt = let (linktxt,rtxt) = break (==']') txt in
 markdownHRef :: String -> [SourceMDElem]
 markdownHRef txt = let (url,rtxt) = break (=='>') txt in
   if null rtxt
-  then outsideMarkdownElem "" ('<':txt)
+  then outsideMarkdownElem "<" txt
   else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
 
 insideMarkdownElem :: String -> String -> String -> [SourceMDElem]

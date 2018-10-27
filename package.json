@@ -5,7 +5,8 @@
     "synopsis": "Libraries to process markdown documents",
     "category": [ "Web" ],
     "dependencies": {
-        "html": ">= 3.0.0"
+        "html": ">= 3.0.0",
+        "base": ">= 2.0.0"
     },
     "exportedModules": [ "Markdown" ],
     "compilerCompatibility": {
