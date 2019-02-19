@@ -3,7 +3,7 @@ supported by the contained in this package.
 
 After installing the tool by
 
-    > cpm installapp markdown
+    > cpm install markdown
 
 you can show the markdown description as a PDF (with the viewer `evince`,
 see the definition of the operation `Markdown.pdflatexFile`)

@@ -10,7 +10,8 @@ It is a subset of the
 (basically, only internal links and pictures are missing)
 supported by the
 [Curry](http://curry-language.org/) library
-[Markdown](http://www.informatik.uni-kiel.de/~pakcs/lib/CDOC/Markdown.html).
+`Markdown` provided by the package
+[markdown](https://www.informatik.uni-kiel.de/~curry/cpm/markdown.html).
 
 Paragraphs and Basic Formatting
 -------------------------------

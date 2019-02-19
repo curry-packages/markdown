@@ -8,7 +8,7 @@ Furthermore, it also provides a stand-alone application
 (executable `md2pdf`) for such translations.
 
 The slightly restricted subset of the markdown syntax recognized by
-this implementation is
-[documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_
-syntax.html).
+this implementation is described in the package file
+`docs/markdown_syntax.md` and also
+[documented in this page](https://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 
