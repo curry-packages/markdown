@@ -7,26 +7,26 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version October 2017
---- @category web
+--- @version February 2019
 ------------------------------------------------------------------------------
 
-module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
-                removeEscapes, markdownEscapeChars,
-                markdownText2HTML,markdownText2CompleteHTML,
-                markdownText2LaTeX,markdownText2LaTeXWithFormat,
-                markdownText2CompleteLaTeX,
-                formatMarkdownFileAsPDF,formatMarkdownInputAsPDF)
+module Text.Markdown
+  ( MarkdownDoc, MarkdownElem(..), fromMarkdownText
+  , removeEscapes, markdownEscapeChars
+  , markdownText2HTML, markdownText2CompleteHTML
+  , markdownText2LaTeX, markdownText2LaTeXWithFormat
+  , markdownText2CompleteLaTeX
+  , formatMarkdownFileAsPDF, formatMarkdownInputAsPDF
+  )
  where
 
 import Char
-import IO   (getContents)
+import IO   ( getContents )
 import List
 import System
 
 import HTML.Base
 import HTML.LaTeX
-import HTML.Parser
 
 -----------------------------------------------------------------------
 --- A markdown document is a list of markdown elements.
@@ -269,7 +269,7 @@ removeEscapes s = case s of
 --- Escape characters supported by markdown.
 markdownEscapeChars :: [Char]
 markdownEscapeChars =
-  ['\\','`','*','_','{','}','[',']','(',')','#','+','-','.',' ','!']
+  ['\\','`','*','_','{','}','[',']','(',')','<','>','#','+','-','.',' ','!']
 
 -- Analyze markdown text outside an element like emphasis, code, strong:
 outsideMarkdownElem :: String -> String -> [SourceMDElem]
@@ -282,11 +282,11 @@ outsideMarkdownElem txt s = case s of
   ('_':'_':cs) -> addPrevious txt $ insideMarkdownElem "__" [] cs
   ('*':cs)     -> addPrevious txt $ insideMarkdownElem "*" [] cs
   ('_':cs)     -> addPrevious txt $ insideMarkdownElem "_" [] cs
-  ('`':cs)     -> addPrevious txt $ insideMarkdownElem "`" [] cs
+  ('`':cs) -> let (ticks, cs') = span (=='`') cs in
+              addPrevious txt $ insideMarkdownElem
+                                  (replicate (length ticks + 1) '`') [] cs'
   ('[':cs) -> addPrevious txt $ tryParseLink cs
-  ('<':cs) -> if take 4 cs == "http"
-              then addPrevious txt $ markdownHRef cs
-              else outsideMarkdownElem ('<':txt) cs
+  ('<':cs) -> addPrevious txt $ markdownHRef cs
   (c:cs)   -> outsideMarkdownElem (c:txt) cs
 
 addPrevious :: String -> [SourceMDElem] -> [SourceMDElem]
@@ -305,7 +305,7 @@ tryParseLink txt = let (linktxt,rtxt) = break (==']') txt in
 markdownHRef :: String -> [SourceMDElem]
 markdownHRef txt = let (url,rtxt) = break (=='>') txt in
   if null rtxt
-  then outsideMarkdownElem "" ('<':txt)
+  then outsideMarkdownElem "<" txt
   else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
 
 insideMarkdownElem :: String -> String -> String -> [SourceMDElem]
@@ -322,12 +322,13 @@ insideMarkdownElem marker etext s =
 
 text2MDElem :: String -> String -> SourceMDElem
 text2MDElem marker txt = case marker of
-  "**" -> SMDStrong txt
-  "__" -> SMDStrong txt
-  "*"  -> SMDEmph txt
-  "_"  -> SMDEmph txt
-  "`"  -> SMDCode txt
-  _    -> error $ "Markdown.text2MDElem: unknown marker \""++marker++"\""
+  "**"                   -> SMDStrong txt
+  "__"                   -> SMDStrong txt
+  "*"                    -> SMDEmph txt
+  "_"                    -> SMDEmph txt
+  _ | all (=='`') marker -> SMDCode txt
+    | otherwise          -> error $ "Markdown.text2MDElem: unknown marker \"" ++
+                                     marker ++ "\""
 
 
 -----------------------------------------------------------------------
@@ -338,7 +339,7 @@ mdDoc2html = map mdElem2html
 
 -- translate markdown special characters in text to HTML
 mdtxt2html :: String -> HtmlExp
-mdtxt2html s = HtmlText (removeEscapes s)
+mdtxt2html = HtmlText . htmlQuote . removeEscapes
 
 mdElem2html :: MarkdownElem -> HtmlExp
 mdElem2html (Text s) = mdtxt2html s
@@ -361,7 +362,7 @@ mdDoc2htmlWithoutPar mdoc = case mdoc of
   [] -> []
   [Par md] -> mdDoc2html md
   [md] -> [mdElem2html md]
-  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline : 
+  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline :
                          mdDoc2htmlWithoutPar (md2:mds)
   (md1:md2:mds) -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
 
@@ -418,16 +419,15 @@ mdElem2latex txt2latex (Header l s) = case l of
 
 
 --- Translator for basic text to LaTeX.
---- markdown escapes are removed and possible HTML markups
---- are translated to LaTeX.
-html2latex :: String -> String
-html2latex = showLatexExps . parseHtmlString . removeEscapes
+--- Markdown escapes are removed and translated to LaTeX.
+text2latex :: String -> String
+text2latex = showLatexExps . (\s -> [htxt s]) . removeEscapes
 
 --- Translate a markdown text into a (partial) LaTeX document.
 --- All characters with a special meaning in LaTeX, like dollar
 --- or ampersand signs, are quoted.
 markdownText2LaTeX :: String -> String
-markdownText2LaTeX = mdDoc2latex html2latex . fromMarkdownText
+markdownText2LaTeX = mdDoc2latex text2latex . fromMarkdownText
 
 --- Translate a markdown text into a (partial) LaTeX document
 --- where the first argument is a function to translate the basic text
@@ -442,7 +442,7 @@ markdownText2LaTeXWithFormat txt2latex = mdDoc2latex txt2latex . fromMarkdownTex
 --- that can be formatted as a standalone document.
 markdownText2CompleteLaTeX :: String -> String
 markdownText2CompleteLaTeX mds =
-  latexHeader ++ mdDoc2latex html2latex (fromMarkdownText mds) ++
+  latexHeader ++ mdDoc2latex text2latex (fromMarkdownText mds) ++
   "\\end{document}\n"
 
 latexHeader :: String

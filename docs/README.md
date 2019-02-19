@@ -6,7 +6,7 @@ After installing the tool by
     > cpm install markdown
 
 you can show the markdown description as a PDF (with the viewer `evince`,
-see the definition of the operation `Markdown.pdflatexFile`)
+see the definition of the operation `Text.Markdown.pdflatexFile`)
 by the command
 
     > md2pdf markdown_syntax.md

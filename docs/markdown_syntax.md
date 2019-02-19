@@ -10,7 +10,7 @@ It is a subset of the
 (basically, only internal links and pictures are missing)
 supported by the
 [Curry](http://curry-language.org/) library
-`Markdown` provided by the package
+`Text.Markdown` provided by the package
 [markdown](https://www.informatik.uni-kiel.de/~curry/cpm/markdown.html).
 
 Paragraphs and Basic Formatting
@@ -38,8 +38,6 @@ link <http://www.google.com>:
 
     <http://www.google.com>
 
-Currently, only links starting with 'http' are recognized
-(so that one can also use HTML markup).
 If one wants to put a link under a text,
 one can put the text in square brackets directly followed by the
 link in round brackets, as in
@@ -66,6 +64,7 @@ The following backslash escapes are recognized:
     \_   underscore
     \{\}  curly braces
     \[\]  square brackets
+    \<\>  angle brackets
     \(\)  parentheses
     \#   hash symbol
     \+   plus symbol
