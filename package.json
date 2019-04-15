@@ -5,12 +5,13 @@
     "synopsis": "Libraries to process markdown documents",
     "category": [ "Web" ],
     "dependencies": {
-        "html": ">= 2.0.0"
+        "base" : ">= 1.0.0, < 2.0.0",
+        "html" : ">= 2.0.0"
     },
     "exportedModules": [ "Text.Markdown" ],
     "compilerCompatibility": {
-        "pakcs": ">= 2.0.0",
-        "kics2": ">= 2.0.0"
+        "pakcs": ">= 2.0.0, < 3.0.0",
+        "kics2": ">= 2.0.0, < 3.0.0"
     },
     "license": "BSD-3-Clause",
     "licenseFile": "LICENSE",
