@@ -3,7 +3,7 @@ supported by the contained in this package.
 
 After installing the tool by
 
-    > cpm install markdown
+    > cypm install markdown
 
 you can show the markdown description as a PDF (with the viewer `evince`,
 see the definition of the operation `Text.Markdown.pdflatexFile`)
