@@ -89,8 +89,9 @@ isSMDOItem md = case md of SMDOItem _ -> True
                            _          -> False
 
 textOfItem :: SourceMDElem -> String
-textOfItem (SMDUItem txt) = txt
-textOfItem (SMDOItem txt) = txt
+textOfItem md = case md of SMDUItem txt -> txt
+                           SMDOItem txt -> txt
+                           _            -> ""
 
 -----------------------------------------------------------------------
 --- Parse markdown document from its textual representation.
