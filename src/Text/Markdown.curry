@@ -7,7 +7,7 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version February 2019
+--- @version September 2020
 ------------------------------------------------------------------------------
 
 module Text.Markdown
@@ -335,40 +335,40 @@ text2MDElem marker txt = case marker of
 -----------------------------------------------------------------------
 -- Translate markdown document to HTML.
 
-mdDoc2html :: MarkdownDoc -> [HtmlExp]
+mdDoc2html :: HTML h => MarkdownDoc -> [h]
 mdDoc2html = map mdElem2html
 
 -- translate markdown special characters in text to HTML
-mdtxt2html :: String -> HtmlExp
-mdtxt2html = HtmlText . htmlQuote . removeEscapes
+mdtxt2html :: HTML h => String -> h
+mdtxt2html = htmlText . htmlQuote . removeEscapes
 
-mdElem2html :: MarkdownElem -> HtmlExp
-mdElem2html (Text s) = mdtxt2html s
-mdElem2html (Emph s) = emphasize [mdtxt2html s]
-mdElem2html (Strong s) = HtmlStruct "strong" [] [mdtxt2html s]
-mdElem2html (HRef s url) = if s==url
-                             then href url [code [mdtxt2html s]]
-                             else href url [mdtxt2html s]
-mdElem2html (Code s) = code [HtmlText (htmlQuote s)]
+mdElem2html :: HTML h => MarkdownElem -> h
+mdElem2html (Text s)      = mdtxt2html s
+mdElem2html (Emph s)      = emphasize [mdtxt2html s]
+mdElem2html (Strong s)    = htmlStruct "strong" [] [mdtxt2html s]
+mdElem2html (HRef s url)  = if s==url
+                              then href url [code [mdtxt2html s]]
+                              else href url [mdtxt2html s]
+mdElem2html (Code s)      = code [htmlText (htmlQuote s)]
 mdElem2html (CodeBlock s) = verbatim s
-mdElem2html (Quote md) = HtmlStruct "blockquote" [] (mdDoc2html md)
-mdElem2html (Par md) = par (mdDoc2html md)
-mdElem2html (UList mds) = ulist (map mdDoc2htmlWithoutPar mds)
-mdElem2html (OList mds) = olist (map mdDoc2htmlWithoutPar mds)
-mdElem2html HRule = hrule
-mdElem2html (Header l s) = HtmlStruct ('h':show l) [] [mdtxt2html s]
+mdElem2html (Quote md)    = htmlStruct "blockquote" [] (mdDoc2html md)
+mdElem2html (Par md)      = par (mdDoc2html md)
+mdElem2html (UList mds)   = ulist (map mdDoc2htmlWithoutPar mds)
+mdElem2html (OList mds)   = olist (map mdDoc2htmlWithoutPar mds)
+mdElem2html HRule         = hrule
+mdElem2html (Header l s)  = htmlStruct ('h':show l) [] [mdtxt2html s]
 
-mdDoc2htmlWithoutPar :: MarkdownDoc -> [HtmlExp]
+mdDoc2htmlWithoutPar :: HTML h => MarkdownDoc -> [h]
 mdDoc2htmlWithoutPar mdoc = case mdoc of
-  [] -> []
-  [Par md] -> mdDoc2html md
-  [md] -> [mdElem2html md]
-  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline :
-                         mdDoc2htmlWithoutPar (md2:mds)
-  (md1:md2:mds) -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
+  []                    -> []
+  [Par md]              -> mdDoc2html md
+  [md]                  -> [mdElem2html md]
+  (Par md1 : md2 : mds) -> mdDoc2html md1 ++ breakline :
+                           mdDoc2htmlWithoutPar (md2:mds)
+  (md1 : md2 : mds)     -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
 
 --- Translate a markdown text into a (partial) HTML document.
-markdownText2HTML :: String -> [HtmlExp]
+markdownText2HTML :: HTML h => String -> [h]
 markdownText2HTML = mdDoc2html . fromMarkdownText
 
 --- Translate a markdown text into a complete HTML text

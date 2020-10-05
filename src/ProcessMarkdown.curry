@@ -14,8 +14,8 @@ main = do
       outfile = outFile opts
   case target opts of
     PDF  -> if null infile
-             then formatMarkdownInputAsPDF
-             else formatMarkdownFileAsPDF infile
+              then formatMarkdownInputAsPDF
+              else formatMarkdownFileAsPDF infile
     TEX  -> do mdtxt <- if null infile then getContents else readFile infile
                let texdoc = if standAlone opts
                               then markdownText2CompleteLaTeX mdtxt
@@ -25,7 +25,7 @@ main = do
     HTML -> do mdtxt <- if null infile then getContents else readFile infile
                let htmldoc = if standAlone opts
                                then markdownText2CompleteHTML (title opts) mdtxt
-                               else showHtmlExps (markdownText2HTML mdtxt)
+                               else showBaseHtmls (markdownText2HTML mdtxt)
                if null outfile then putStrLn htmldoc
                                else writeFile outfile htmldoc
 
