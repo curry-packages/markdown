@@ -9,7 +9,7 @@ It is a subset of the
 [original markdown syntax](http://en.wikipedia.org/wiki/Markdown)
 (basically, only internal links and pictures are missing)
 supported by the
-[Curry](http://curry-language.org/) library
+[Curry](http://curry-lang.org/) library
 `Text.Markdown` provided by the package
 [markdown](https://www.informatik.uni-kiel.de/~curry/cpm/markdown.html).
 
