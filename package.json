@@ -1,17 +1,17 @@
 {
     "name": "markdown",
-    "version": "3.0.0",
+    "version": "3.3.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Libraries to process markdown documents",
     "category": [ "Web" ],
     "dependencies": {
-        "html": ">= 3.0.0",
-        "base": ">= 2.0.0"
+        "base" : ">= 3.0.0, < 4.0.0",
+        "html2": ">= 3.0.0, < 4.0.0"
     },
-    "exportedModules": [ "Markdown" ],
+    "exportedModules": [ "Text.Markdown" ],
     "compilerCompatibility": {
-        "pakcs": ">= 2.0.0",
-        "kics2": ">= 2.0.0"
+        "pakcs": ">= 3.0.0, < 4.0.0",
+        "kics2": ">= 3.0.0, < 4.0.0"
     },
     "license": "BSD-3-Clause",
     "licenseFile": "LICENSE",

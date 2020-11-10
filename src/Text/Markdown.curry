@@ -7,30 +7,26 @@
 --- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
 ---
 --- @author Michael Hanus
---- @version July 2018
---- @category web
+--- @version September 2020
 ------------------------------------------------------------------------------
 
-module Markdown(MarkdownDoc,MarkdownElem(..),fromMarkdownText,
-                removeEscapes, markdownEscapeChars,
-                markdownText2HTML,markdownText2CompleteHTML,
-                markdownText2LaTeX,markdownText2LaTeXWithFormat,
-                markdownText2CompleteLaTeX,
-                formatMarkdownFileAsPDF,formatMarkdownInputAsPDF)
+module Text.Markdown
+  ( MarkdownDoc, MarkdownElem(..), fromMarkdownText
+  , removeEscapes, markdownEscapeChars
+  , markdownText2HTML, markdownText2CompleteHTML
+  , markdownText2LaTeX, markdownText2LaTeXWithFormat
+  , markdownText2CompleteLaTeX
+  , formatMarkdownFileAsPDF, formatMarkdownInputAsPDF
+  )
  where
 
 import Data.Char
-import System.IO   (getContents)
+import System.IO   ( getContents )
 import Data.List
 import System.Process
 
 import HTML.Base
 import HTML.LaTeX
-import HTML.Parser
-
-import HTML.Base
-import HTML.LaTeX
-import HTML.Parser
 
 -----------------------------------------------------------------------
 --- A markdown document is a list of markdown elements.
@@ -93,8 +89,9 @@ isSMDOItem md = case md of SMDOItem _ -> True
                            _          -> False
 
 textOfItem :: SourceMDElem -> String
-textOfItem (SMDUItem txt) = txt
-textOfItem (SMDOItem txt) = txt
+textOfItem md = case md of SMDUItem txt -> txt
+                           SMDOItem txt -> txt
+                           _            -> ""
 
 -----------------------------------------------------------------------
 --- Parse markdown document from its textual representation.
@@ -273,7 +270,7 @@ removeEscapes s = case s of
 --- Escape characters supported by markdown.
 markdownEscapeChars :: [Char]
 markdownEscapeChars =
-  ['\\','`','*','_','{','}','[',']','(',')','#','+','-','.',' ','!']
+  ['\\','`','*','_','{','}','[',']','(',')','<','>','#','+','-','.',' ','!']
 
 -- Analyze markdown text outside an element like emphasis, code, strong:
 outsideMarkdownElem :: String -> String -> [SourceMDElem]
@@ -290,9 +287,7 @@ outsideMarkdownElem txt s = case s of
               addPrevious txt $ insideMarkdownElem
                                   (replicate (length ticks + 1) '`') [] cs'
   ('[':cs) -> addPrevious txt $ tryParseLink cs
-  ('<':cs) -> if take 4 cs == "http"
-              then addPrevious txt $ markdownHRef cs
-              else outsideMarkdownElem ('<':txt) cs
+  ('<':cs) -> addPrevious txt $ markdownHRef cs
   (c:cs)   -> outsideMarkdownElem (c:txt) cs
 
 addPrevious :: String -> [SourceMDElem] -> [SourceMDElem]
@@ -340,40 +335,40 @@ text2MDElem marker txt = case marker of
 -----------------------------------------------------------------------
 -- Translate markdown document to HTML.
 
-mdDoc2html :: MarkdownDoc -> [HtmlExp]
+mdDoc2html :: HTML h => MarkdownDoc -> [h]
 mdDoc2html = map mdElem2html
 
 -- translate markdown special characters in text to HTML
-mdtxt2html :: String -> HtmlExp
-mdtxt2html s = HtmlText (removeEscapes s)
+mdtxt2html :: HTML h => String -> h
+mdtxt2html = htmlText . htmlQuote . removeEscapes
 
-mdElem2html :: MarkdownElem -> HtmlExp
-mdElem2html (Text s) = mdtxt2html s
-mdElem2html (Emph s) = emphasize [mdtxt2html s]
-mdElem2html (Strong s) = HtmlStruct "strong" [] [mdtxt2html s]
-mdElem2html (HRef s url) = if s==url
-                             then href url [code [mdtxt2html s]]
-                             else href url [mdtxt2html s]
-mdElem2html (Code s) = code [HtmlText (htmlQuote s)]
+mdElem2html :: HTML h => MarkdownElem -> h
+mdElem2html (Text s)      = mdtxt2html s
+mdElem2html (Emph s)      = emphasize [mdtxt2html s]
+mdElem2html (Strong s)    = htmlStruct "strong" [] [mdtxt2html s]
+mdElem2html (HRef s url)  = if s==url
+                              then href url [code [mdtxt2html s]]
+                              else href url [mdtxt2html s]
+mdElem2html (Code s)      = code [htmlText (htmlQuote s)]
 mdElem2html (CodeBlock s) = verbatim s
-mdElem2html (Quote md) = HtmlStruct "blockquote" [] (mdDoc2html md)
-mdElem2html (Par md) = par (mdDoc2html md)
-mdElem2html (UList mds) = ulist (map mdDoc2htmlWithoutPar mds)
-mdElem2html (OList mds) = olist (map mdDoc2htmlWithoutPar mds)
-mdElem2html HRule = hrule
-mdElem2html (Header l s) = HtmlStruct ('h':show l) [] [mdtxt2html s]
+mdElem2html (Quote md)    = htmlStruct "blockquote" [] (mdDoc2html md)
+mdElem2html (Par md)      = par (mdDoc2html md)
+mdElem2html (UList mds)   = ulist (map mdDoc2htmlWithoutPar mds)
+mdElem2html (OList mds)   = olist (map mdDoc2htmlWithoutPar mds)
+mdElem2html HRule         = hrule
+mdElem2html (Header l s)  = htmlStruct ('h':show l) [] [mdtxt2html s]
 
-mdDoc2htmlWithoutPar :: MarkdownDoc -> [HtmlExp]
+mdDoc2htmlWithoutPar :: HTML h => MarkdownDoc -> [h]
 mdDoc2htmlWithoutPar mdoc = case mdoc of
-  [] -> []
-  [Par md] -> mdDoc2html md
-  [md] -> [mdElem2html md]
-  (Par md1:md2:mds) -> mdDoc2html md1 ++ breakline :
-                         mdDoc2htmlWithoutPar (md2:mds)
-  (md1:md2:mds) -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
+  []                    -> []
+  [Par md]              -> mdDoc2html md
+  [md]                  -> [mdElem2html md]
+  (Par md1 : md2 : mds) -> mdDoc2html md1 ++ breakline :
+                           mdDoc2htmlWithoutPar (md2:mds)
+  (md1 : md2 : mds)     -> mdElem2html md1 : mdDoc2htmlWithoutPar (md2:mds)
 
 --- Translate a markdown text into a (partial) HTML document.
-markdownText2HTML :: String -> [HtmlExp]
+markdownText2HTML :: HTML h => String -> [h]
 markdownText2HTML = mdDoc2html . fromMarkdownText
 
 --- Translate a markdown text into a complete HTML text
@@ -425,16 +420,15 @@ mdElem2latex txt2latex (Header l s) = case l of
 
 
 --- Translator for basic text to LaTeX.
---- markdown escapes are removed and possible HTML markups
---- are translated to LaTeX.
-html2latex :: String -> String
-html2latex = showLatexExps . parseHtmlString . removeEscapes
+--- Markdown escapes are removed and translated to LaTeX.
+text2latex :: String -> String
+text2latex = showLatexExps . (\s -> [htxt s]) . removeEscapes
 
 --- Translate a markdown text into a (partial) LaTeX document.
 --- All characters with a special meaning in LaTeX, like dollar
 --- or ampersand signs, are quoted.
 markdownText2LaTeX :: String -> String
-markdownText2LaTeX = mdDoc2latex html2latex . fromMarkdownText
+markdownText2LaTeX = mdDoc2latex text2latex . fromMarkdownText
 
 --- Translate a markdown text into a (partial) LaTeX document
 --- where the first argument is a function to translate the basic text
@@ -449,7 +443,7 @@ markdownText2LaTeXWithFormat txt2latex = mdDoc2latex txt2latex . fromMarkdownTex
 --- that can be formatted as a standalone document.
 markdownText2CompleteLaTeX :: String -> String
 markdownText2CompleteLaTeX mds =
-  latexHeader ++ mdDoc2latex html2latex (fromMarkdownText mds) ++
+  latexHeader ++ mdDoc2latex text2latex (fromMarkdownText mds) ++
   "\\end{document}\n"
 
 latexHeader :: String
@@ -487,6 +481,6 @@ pdflatexFile tmp = do
   system $ "/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log "++tmp++".out"
   system $ "evince "++tmp++".pdf"
   system $ "/bin/rm -f "++tmp++".pdf"
-  done
+  return ()
 
 -----------------------------------------------------------------------
