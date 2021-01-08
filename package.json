@@ -19,6 +19,10 @@
         "name": "md2pdf",
         "main": "ProcessMarkdown"
     },
+    "documentation": {
+        "src-dir": "docs",
+        "main": "markdown-syntax.md"
+    },
     "source": {
         "git": "https://git.ps.informatik.uni-kiel.de/curry-packages/markdown.git",
         "tag": "$version"

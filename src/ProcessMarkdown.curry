@@ -14,8 +14,8 @@ main = do
       outfile = outFile opts
   case target opts of
     PDF  -> if null infile
-              then formatMarkdownInputAsPDF
-              else formatMarkdownFileAsPDF infile
+              then formatMarkdownInputAsPDF outfile
+              else formatMarkdownFileAsPDF infile outfile
     TEX  -> do mdtxt <- if null infile then getContents else readFile infile
                let texdoc = if standAlone opts
                               then markdownText2CompleteLaTeX mdtxt
