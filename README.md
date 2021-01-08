@@ -10,5 +10,5 @@ Furthermore, it also provides a stand-alone application
 The slightly restricted subset of the markdown syntax recognized by
 this implementation is described in the package file
 `docs/markdown-syntax.md`.
-A PDF version of this documentation can be found is available
+A PDF version of this documentation is available
 as the manual of this package.
