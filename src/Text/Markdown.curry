@@ -20,10 +20,10 @@ module Text.Markdown
   )
  where
 
-import Char
-import IO   ( getContents )
-import List
-import System
+import Data.Char
+import System.IO   ( getContents )
+import Data.List
+import System.Process
 
 import HTML.Base
 import HTML.LaTeX
@@ -119,9 +119,9 @@ joinItems :: ([[MarkdownElem]] -> MarkdownElem) -> (SourceMDElem -> Bool)
 joinItems mdlcons _ items [] = [mdlcons (reverse (map fromMarkdownText items))]
 joinItems mdlcons isitem items (md:mds) =
   if isitem md
-  then joinItems mdlcons isitem (textOfItem md : items) mds
-  else mdlcons (reverse (map fromMarkdownText items))
-        : groupMarkDownElems (md:mds)
+    then joinItems mdlcons isitem (textOfItem md : items) mds
+    else mdlcons (reverse (map fromMarkdownText items))
+          : groupMarkDownElems (md:mds)
 
 -- Basic reader for a markdown text.
 markdownText :: String -> [SourceMDElem]
@@ -132,27 +132,32 @@ markdownText txt@(_:_) = markdownLine fstline (dropFirst remtxt)
 -- Analyze the first line of a markdown text:
 markdownLine :: String -> String -> [SourceMDElem]
 markdownLine fstline remtxt
- | all isSpace fstline   = markdownText remtxt
- | isLevel1Line = SMDHeader 1 fstline : markdownText (dropFirst furtherlines)
- | isLevel2Line = SMDHeader 2 fstline : markdownText (dropFirst furtherlines)
- | take 1 fstline == "#" = tryMDHeader fstline remtxt
- | isHRule fstline       = SMDHRule : markdownText remtxt
- | take 2 fstline == "> " -- start of a quoted text
+  | all isSpace fstline
+  = markdownText remtxt
+  | blanklen > 0 -- four space indent for code
+  = markdownCodeBlock blanklen (drop blanklen fstline) remtxt
+  | isLevel1Line
+  = SMDHeader 1 fstline : markdownText (dropFirst furtherlines)
+  | isLevel2Line
+  = SMDHeader 2 fstline : markdownText (dropFirst furtherlines)
+  | take 1 fstline == "#"
+  = tryMDHeader fstline remtxt
+  | isHRule fstline
+  = SMDHRule : markdownText remtxt
+  | take 2 fstline == "> " -- start of a quoted text
   = markdownQuote (drop 2 fstline) remtxt
- | blanklen > 0 -- four space indent for code
-  = markdownCodeBlock blanklen (removeEscapes (drop blanklen fstline)) remtxt
- | uitemlen > 0 -- start of an unordered item
+  | uitemlen > 0 -- start of an unordered item
   = markdownItem SMDUItem uitemlen (drop uitemlen fstline) remtxt
- | nitemlen > 0 -- start of a numbered item
+  | nitemlen > 0 -- start of a numbered item
   = markdownItem SMDOItem nitemlen (drop nitemlen fstline) remtxt
- | otherwise = markdownPar fstline remtxt
+  | otherwise = markdownPar fstline remtxt
  where
+  blanklen = isCodeLine fstline
   (sndline,furtherlines) = break (=='\n') remtxt
   isLevel1Line = not (null sndline) && all (=='=') sndline
   isLevel2Line = not (null sndline) && all (=='-') sndline
   nitemlen = isNumberedItemLine fstline
   uitemlen = isUnorderedItemLine fstline
-  blanklen = isCodeLine fstline
 
 dropFirst :: [a] -> [a]
 dropFirst s = if null s then [] else tail s
@@ -163,8 +168,8 @@ tryMDHeader s rtxt =
   let (sharps,htxt) = break (==' ') s
       level = length sharps
    in if null htxt || level>6
-      then markdownPar s rtxt
-      else SMDHeader level (dropFirst htxt) : markdownText rtxt
+        then markdownPar s rtxt
+        else SMDHeader level (dropFirst htxt) : markdownText rtxt
 
 -- is a line a horizontal rule:
 isHRule :: String -> Bool
@@ -177,30 +182,31 @@ isHRule l =
 isUnorderedItemLine :: String -> Int
 isUnorderedItemLine s =
   let (blanks,nonblanks) = span (==' ') s
-   in if take 2 nonblanks `elem` ["* ","- ","+ "] then length blanks+2 else 0
+  in if take 2 nonblanks `elem` ["* ","- ","+ "] then length blanks+2 else 0
 
 -- check whether a line starts with an indented number and return indent value:
 isNumberedItemLine :: String -> Int
 isNumberedItemLine s =
   let (blanks,nonblanks) = span (==' ') s
       numblanks = length blanks
-   in checkNumber numblanks nonblanks
+  in checkNumber numblanks nonblanks
  where
   checkNumber indt numtxt =
     let (ns,brt) = break (==' ') numtxt
         (blanks,rtxt) = break (/=' ') brt
         nsl = length ns
-     in if nsl>0 && all isDigit (take (nsl-1) ns) && ns!!(nsl-1)=='.' &&
-           not (null blanks) && not (null rtxt)
-        then indt+nsl+length blanks
-        else 0
+    in if nsl>0 && all isDigit (take (nsl-1) ns) && ns!!(nsl-1)=='.' &&
+          not (null blanks) && not (null rtxt)
+         then indt+nsl+length blanks
+         else 0
 
--- check whether a line starts with at least four blanks and return indent value:
+-- Check whether a line starts with at least four blanks and
+-- return indent value:
 isCodeLine :: String -> Int
 isCodeLine s =
   let (blanks,nonblanks) = span (==' ') s
       numblanks = length blanks
-   in if not (null nonblanks) && numblanks >= 4 then numblanks else 0
+  in if not (null nonblanks) && numblanks >= 4 then numblanks else 0
 
 -- parse a paragraph (where the initial part of the paragraph is given
 -- as the first argument):
@@ -224,23 +230,22 @@ markdownQuote qtxt alltxt =
             then "> " ++ drop 1 alltxt
             else alltxt
   in if take 2 txt == "> "
-     then let (fstline,remtxt) = break (=='\n') (drop 2 txt)
-           in if null remtxt
-              then [SMDQuote (fromMarkdownText (qtxt++'\n':fstline))]
-              else markdownQuote (qtxt++'\n':fstline) (tail remtxt)
-     else SMDQuote (fromMarkdownText qtxt) : markdownText txt
+       then let (fstline,remtxt) = break (=='\n') (drop 2 txt)
+            in if null remtxt
+                 then [SMDQuote (fromMarkdownText (qtxt++'\n':fstline))]
+                 else markdownQuote (qtxt++'\n':fstline) (tail remtxt)
+       else SMDQuote (fromMarkdownText qtxt) : markdownText txt
 
 -- parse a program block (where the indent and the initial code block is given):
 markdownCodeBlock :: Int -> String -> String -> [SourceMDElem]
 markdownCodeBlock n ctxt txt =
-  if take n txt == "    "
-  then
-   let (fstline,remtxt) = break (=='\n') (drop n txt)
-    in if null remtxt
-       then [SMDCodeBlock (ctxt++'\n':removeEscapes fstline)]
-       else markdownCodeBlock n (ctxt++'\n':removeEscapes fstline)
-                                (tail remtxt)
-  else SMDCodeBlock ctxt : markdownText txt
+  if all (==' ') (take n txt)
+    then let (fstline,remtxt) = break (=='\n') (drop n txt)
+         in if null remtxt
+              then [SMDCodeBlock (ctxt ++ '\n' : fstline)]
+              else markdownCodeBlock n (ctxt ++ '\n' : fstline)
+                                     (tail remtxt)
+    else SMDCodeBlock ctxt : markdownText txt
 
 -- parse a markdown list item:
 markdownItem :: (String -> SourceMDElem) -> Int -> String -> String
@@ -248,23 +253,23 @@ markdownItem :: (String -> SourceMDElem) -> Int -> String -> String
 markdownItem icons n itxt txt =
   if take n txt == take n (repeat ' ')
   then let (fstline,remtxt) = break (=='\n') (drop n txt)
-        in if null remtxt
-           then [icons (itxt++'\n':fstline)]
-           else markdownItem icons n (itxt++'\n':fstline) (tail remtxt)
+       in if null remtxt
+            then [icons (itxt++'\n':fstline)]
+            else markdownItem icons n (itxt++'\n':fstline) (tail remtxt)
   else let (fstline,remtxt) = break (=='\n') txt
-        in if all isSpace fstline
-           then if null remtxt
-                then [icons itxt]
-                else markdownItem icons n (itxt++"\n") (tail remtxt)
-           else icons itxt : markdownText txt
+       in if all isSpace fstline
+            then if null remtxt
+                   then [icons itxt]
+                   else markdownItem icons n (itxt++"\n") (tail remtxt)
+            else icons itxt : markdownText txt
 
 --- Remove the backlash of escaped markdown characters in a string.
 removeEscapes :: String -> String
 removeEscapes s = case s of
   []          -> []
   ('\\':c:cs) -> if c `elem` markdownEscapeChars
-                 then c : removeEscapes cs
-                 else '\\' : removeEscapes (c:cs)
+                   then c : removeEscapes cs
+                   else '\\' : removeEscapes (c:cs)
   (c:cs)      -> c : removeEscapes cs
 
 --- Escape characters supported by markdown.
@@ -277,8 +282,8 @@ outsideMarkdownElem :: String -> String -> [SourceMDElem]
 outsideMarkdownElem txt s = case s of
   [] -> addPrevious txt []
   ('\\':c:cs)  -> if c `elem` markdownEscapeChars
-                  then outsideMarkdownElem (c:'\\':txt) cs
-                  else outsideMarkdownElem ('\\':txt) (c:cs)
+                    then outsideMarkdownElem (c:'\\':txt) cs
+                    else outsideMarkdownElem ('\\':txt) (c:cs)
   ('*':'*':cs) -> addPrevious txt $ insideMarkdownElem "**" [] cs
   ('_':'_':cs) -> addPrevious txt $ insideMarkdownElem "__" [] cs
   ('*':cs)     -> addPrevious txt $ insideMarkdownElem "*" [] cs
@@ -297,29 +302,29 @@ addPrevious ptxt xs = if null ptxt then xs else SMDText (reverse ptxt) : xs
 tryParseLink :: String -> [SourceMDElem]
 tryParseLink txt = let (linktxt,rtxt) = break (==']') txt in
   if null rtxt || null (tail rtxt) || (rtxt!!1 /= '(')
-  then outsideMarkdownElem "[" txt
-  else let (url,mtxt) = break (==')') (drop 2 rtxt)
-        in if null mtxt
-           then outsideMarkdownElem "[" txt
-           else SMDHRef linktxt url : outsideMarkdownElem "" (tail mtxt)
+    then outsideMarkdownElem "[" txt
+    else let (url,mtxt) = break (==')') (drop 2 rtxt)
+         in if null mtxt
+              then outsideMarkdownElem "[" txt
+              else SMDHRef linktxt url : outsideMarkdownElem "" (tail mtxt)
 
 markdownHRef :: String -> [SourceMDElem]
 markdownHRef txt = let (url,rtxt) = break (=='>') txt in
   if null rtxt
-  then outsideMarkdownElem "<" txt
-  else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
+    then outsideMarkdownElem "<" txt
+    else SMDHRef url url : outsideMarkdownElem "" (dropFirst rtxt)
 
 insideMarkdownElem :: String -> String -> String -> [SourceMDElem]
 insideMarkdownElem marker etext s =
   if marker `isPrefixOf` s
-  then text2MDElem marker (reverse etext)
-        : outsideMarkdownElem "" (drop (length marker) s)
-  else case s of
-        []     -> [SMDText (marker ++ reverse etext)] -- end marker missing
-        ('\\':c:cs) -> if c `elem` markdownEscapeChars
-                       then insideMarkdownElem marker (c:'\\':etext) cs
-                       else insideMarkdownElem marker ('\\':etext) (c:cs)
-        (c:cs)      -> insideMarkdownElem marker (c:etext) cs
+    then text2MDElem marker (reverse etext)
+          : outsideMarkdownElem "" (drop (length marker) s)
+    else case s of
+           []     -> [SMDText (marker ++ reverse etext)] -- end marker missing
+           ('\\':c:cs) -> if c `elem` markdownEscapeChars
+                            then insideMarkdownElem marker (c:'\\':etext) cs
+                            else insideMarkdownElem marker ('\\':etext) (c:cs)
+           (c:cs)      -> insideMarkdownElem marker (c:etext) cs
 
 text2MDElem :: String -> String -> SourceMDElem
 text2MDElem marker txt = case marker of
@@ -447,40 +452,46 @@ markdownText2CompleteLaTeX mds =
   "\\end{document}\n"
 
 latexHeader :: String
-latexHeader =
- "\\documentclass{article}\n"++
- "\\usepackage[utf8x]{inputenc}\n"++
- "\\usepackage{url}\n"++
- "\\usepackage[breaklinks=true,unicode=true]{hyperref}\n"++
- "\\setlength{\\parindent}{0pt}\n"++
- "\\setlength{\\parskip}{6pt plus 2pt minus 1pt}\n"++
- "\\setcounter{secnumdepth}{0}\n"++
- "\\begin{document}\n"
-
+latexHeader = unwords
+  [ "\\documentclass{article}"
+  , "\\usepackage[utf8x]{inputenc}"
+  , "\\usepackage{url}"
+  , "\\usepackage[breaklinks=true,unicode=true]{hyperref}"
+  , "\\setlength{\\parindent}{0pt}"
+  , "\\setlength{\\parskip}{6pt plus 2pt minus 1pt}"
+  , "\\setcounter{secnumdepth}{0}"
+  , "\\begin{document}"
+  ]
 
 --- Format the standard input (containing markdown text) as PDF.
-formatMarkdownInputAsPDF :: IO ()
-formatMarkdownInputAsPDF = getContents >>= formatMarkdownAsPDF
+formatMarkdownInputAsPDF :: String -> IO ()
+formatMarkdownInputAsPDF outfile = getContents >>= formatMarkdownAsPDF outfile
 
 --- Format a file containing markdown text as PDF.
-formatMarkdownFileAsPDF :: String -> IO ()
-formatMarkdownFileAsPDF fname = readFile fname >>= formatMarkdownAsPDF
+formatMarkdownFileAsPDF :: String -> String -> IO ()
+formatMarkdownFileAsPDF infile outfile =
+  readFile infile >>= formatMarkdownAsPDF outfile
 
 --- Format a file containing markdown text as PDF.
-formatMarkdownAsPDF :: String -> IO ()
-formatMarkdownAsPDF mdstr = do
+formatMarkdownAsPDF :: String -> String -> IO ()
+formatMarkdownAsPDF outfile mdstr = do
   pid <- getPID
-  let tmp = "tmp_"++show pid
-  writeFile (tmp++".tex") (markdownText2CompleteLaTeX mdstr)
-  pdflatexFile tmp
+  let tmp = "tmp_" ++ show pid
+  writeFile (tmp ++ ".tex") (markdownText2CompleteLaTeX mdstr)
+  pdflatexFile tmp outfile
 
 -- Format a file tmp.tex with pdflatex and show the result
-pdflatexFile :: String -> IO ()
-pdflatexFile tmp = do
-  system $ "pdflatex \'\\nonstopmode\\input{"++tmp++".tex}\'"
-  system $ "/bin/rm -f "++tmp++".tex "++tmp++".aux "++tmp++".log "++tmp++".out"
-  system $ "evince "++tmp++".pdf"
-  system $ "/bin/rm -f "++tmp++".pdf"
-  done
+pdflatexFile :: String -> String -> IO ()
+pdflatexFile tmp outfile = do
+  system $ "pdflatex \'\\nonstopmode\\input{" ++ tmp ++ ".tex}\'"
+  system $ unwords ["/bin/rm -f", tmp ++ ".tex", tmp ++ ".aux", tmp ++ ".log",
+                    tmp ++ ".out"]
+  if null outfile
+    then do system $ "evince " ++ tmppdf
+            system $ "/bin/rm -f " ++ tmppdf
+    else system $ "/bin/mv -f " ++ tmppdf ++ " " ++ outfile
+  return ()
+ where
+  tmppdf = tmp ++ ".pdf"
 
 -----------------------------------------------------------------------
