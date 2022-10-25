@@ -25,7 +25,8 @@ main = do
     HTML -> do mdtxt <- if null infile then getContents else readFile infile
                let htmldoc = if standAlone opts
                                then markdownText2CompleteHTML (title opts) mdtxt
-                               else showBaseHtmls (markdownText2HTML mdtxt)
+                               else showHtmls
+                                      (markdownText2HTML mdtxt :: [BaseHtml])
                if null outfile then putStrLn htmldoc
                                else writeFile outfile htmldoc
 
