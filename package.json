@@ -3,7 +3,7 @@
     "version": "3.3.0",
     "author": "Michael Hanus <mh@informatik.uni-kiel.de>",
     "synopsis": "Libraries to process markdown documents",
-    "category": [ "Web" ],
+    "category": [ "Documentation", "Web" ],
     "dependencies": {
         "base" : ">= 3.0.0, < 4.0.0",
         "html2": ">= 3.0.0, < 4.0.0"
