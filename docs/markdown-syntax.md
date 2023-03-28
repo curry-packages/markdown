@@ -10,7 +10,7 @@ It is a subset of the
 (e.g., internal links and pictures are missing)
 supported by the
 [Curry](http://curry-lang.org/) package
-[markdown](https://www-ps.informatik.uni-kiel.de/~cpm/pkgs/markdown.html).
+[markdown](https://cpm.curry-lang.org/pkgs/markdown.html).
 
 
 Paragraphs and Basic Formatting
