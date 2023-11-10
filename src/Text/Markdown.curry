@@ -4,10 +4,10 @@
 --- into HTML or LaTeX.
 --- The slightly restricted subset of the markdown syntax recognized by
 --- this implementation is
---- [documented in this page](http://www.informatik.uni-kiel.de/~pakcs/markdown_syntax.html).
+--- [documented in this page](https://github.com/curry-packages/markdown/blob/master/docs/markdown-syntax.md).
 ---
 --- @author Michael Hanus
---- @version September 2020
+--- @version November 2023
 ------------------------------------------------------------------------------
 
 module Text.Markdown
