@@ -4,7 +4,7 @@
 --- into HTML or LaTeX.
 --- The slightly restricted subset of the markdown syntax recognized by
 --- this implementation is
---- [documented in this page](https://github.com/curry-packages/markdown/blob/master/docs/markdown-syntax.md).
+--- [documented in this page](https://github.com/curry-packages/markdown/blob/main/docs/markdown-syntax.md).
 ---
 --- @author Michael Hanus
 --- @version November 2023
